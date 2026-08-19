@@ -5,6 +5,19 @@
 @tailwind utilities;
 
 :root {
+  --ink: #0f172a;
+  --ink-soft: #1e293b;
+  --mist: #f8fafc;
+  --card: #ffffff;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --line-strong: #cbd5e1;
+  --accent: #0f766e;
+  --accent-soft: #99f6e4;
+  --accent-tint: #f0fdfa;
+  --signal: #f97316;
+  --strain: #b45309;
+  --price: #1d4ed8;
   color: #0f172a;
   background-color: #f8fafc;
 }
@@ -17,6 +30,7 @@ body {
     radial-gradient(circle at 12% 14%, rgba(15, 118, 110, 0.22), transparent 30%),
     radial-gradient(circle at 80% 0%, rgba(191, 219, 254, 0.7), transparent 34%),
     linear-gradient(180deg, #f8fafc 0%, #eff6ff 52%, #f8fafc 100%);
+  background-attachment: fixed;
 }
 
 #root {
@@ -25,4 +39,99 @@ body {
 
 .card {
   @apply rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-card backdrop-blur-sm;
+}
+
+.masthead {
+  @apply mb-6 animate-rise rounded-3xl border bg-white/85 p-5 shadow-card;
+  border-color: color-mix(in srgb, var(--accent-soft) 62%, white);
+}
+
+.status-pill {
+  @apply rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white;
+  background: var(--accent);
+}
+
+.chip-btn {
+  @apply rounded-xl border bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition;
+  border-color: var(--line-strong);
+}
+
+.chip-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.tab-btn {
+  @apply rounded-xl px-4 py-2 text-sm font-semibold transition;
+}
+
+.tab-btn-active {
+  @apply text-white;
+  background: var(--ink);
+}
+
+.tab-btn-idle {
+  @apply bg-white/75 text-slate-700;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.tab-btn-idle:hover {
+  @apply bg-white;
+}
+
+.field-input,
+select,
+input[type="time"] {
+  @apply w-full rounded-xl border bg-white px-3 py-2;
+  border-color: var(--line);
+}
+
+input[type="range"] {
+  accent-color: var(--accent);
+}
+
+.notice {
+  @apply rounded-xl border p-3 text-sm font-medium;
+  border-color: var(--accent-soft);
+  background: var(--accent-tint);
+  color: #134e4a;
+}
+
+.btn-primary {
+  @apply rounded-xl px-5 py-3 font-semibold text-white transition;
+  background: var(--ink);
+}
+
+.btn-primary:hover {
+  background: var(--ink-soft);
+}
+
+.btn-outline {
+  @apply rounded-lg border bg-white px-3 py-2 text-sm font-semibold transition;
+  border-color: var(--line-strong);
+}
+
+.btn-outline:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.metric-card {
+  @apply rounded-xl border bg-white p-3;
+  border-color: var(--line);
+}
+
+.metric-key {
+  @apply text-xs uppercase tracking-wide;
+  color: var(--muted);
+}
+
+.metric-val {
+  @apply mt-1 text-base font-semibold;
+}
+
+.explanation {
+  @apply rounded-xl border p-4;
+  border-color: var(--accent-soft);
+  background: var(--accent-tint);
 }

@@ -165,13 +165,13 @@ function App() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-6 text-ink sm:px-6">
-      <header className="mb-6 animate-rise rounded-3xl border border-teal-200/70 bg-white/85 p-5 shadow-card">
+      <header className="masthead">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-teal-700">FlexPlug</p>
             <h1 className="mt-2 text-2xl font-bold md:text-3xl">FlexPlug: Household EV Charging Automation Demo</h1>
           </div>
-          <div className="rounded-xl bg-teal-700 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white">
+          <div className="status-pill">
             Demo time: {hourLabel(simulatedSlot)}
           </div>
         </div>
@@ -186,7 +186,7 @@ function App() {
               type="button"
               key={item.label}
               onClick={item.action}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium transition hover:border-teal-500 hover:text-teal-700"
+              className="chip-btn"
             >
               {item.label}
             </button>
@@ -205,10 +205,10 @@ function App() {
             key={key}
             type="button"
             onClick={() => setView(key as View)}
-            className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+            className={`tab-btn ${
               view === key
-                ? "bg-ink text-white"
-                : "bg-white/75 text-slate-700 ring-1 ring-slate-300 hover:bg-white"
+                ? "tab-btn-active"
+                : "tab-btn-idle"
             }`}
           >
             {label}
@@ -226,7 +226,7 @@ function App() {
                 type="time"
                 value={preferences.departureTime}
                 onChange={(e) => setPreferences((prev) => ({ ...prev, departureTime: e.target.value }))}
-                className="w-full rounded-lg border border-slate-300 p-2"
+                className="field-input"
               />
             </label>
 
@@ -239,7 +239,7 @@ function App() {
                 step={1}
                 value={preferences.targetSoc}
                 onChange={(e) => setPreferences((prev) => ({ ...prev, targetSoc: Number(e.target.value) }))}
-                className="w-full accent-teal-700"
+                className="w-full"
               />
             </label>
           </div>
@@ -255,7 +255,7 @@ function App() {
               step={0.01}
               value={preferences.chargingPreference}
               onChange={(e) => setPreferences((prev) => ({ ...prev, chargingPreference: Number(e.target.value) }))}
-              className="w-full accent-teal-700"
+              className="w-full"
             />
             <div className="flex justify-between text-xs text-slate-500">
               <span>Cheapest</span>
@@ -281,27 +281,27 @@ function App() {
                 onChange: (checked: boolean) => setPreferences((prev) => ({ ...prev, allowV2G: checked })),
               },
             ].map((toggle) => (
-              <label key={toggle.label} className="rounded-xl border border-slate-300 bg-white p-3">
+              <label key={toggle.label} className="rounded-xl border border-slate-200 bg-white p-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-medium">{toggle.label}</span>
                   <input
                     type="checkbox"
                     checked={toggle.checked}
                     onChange={(e) => toggle.onChange(e.target.checked)}
-                    className="h-4 w-4 accent-teal-700"
+                    className="h-4 w-4"
                   />
                 </div>
               </label>
             ))}
           </div>
 
-          <div className="rounded-xl border border-teal-200 bg-teal-50 p-3 text-sm font-medium text-teal-900">
+          <div className="notice">
             Your departure time and required charge level will always take priority.
           </div>
 
           <button
             type="button"
-            className="rounded-xl bg-ink px-5 py-3 font-semibold text-white transition hover:bg-slate-800"
+            className="btn-primary"
             onClick={() => setView("charging")}
           >
             Save preferences
@@ -344,35 +344,35 @@ function App() {
             <div className="mt-4 flex flex-wrap gap-2">
               <button
                 type="button"
-                className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white"
+                className="btn-primary"
                 onClick={() => setForceChargeNow(true)}
               >
                 Charge now
               </button>
               <button
                 type="button"
-                className="rounded-lg bg-amber-700 px-3 py-2 text-sm font-semibold text-white"
+                className="rounded-lg bg-amber-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-800"
                 onClick={() => setPauseAutomationTonight(true)}
               >
                 Pause automation tonight
               </button>
               <button
                 type="button"
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold"
+                className="btn-outline"
                 onClick={() => setView("preferences")}
               >
                 Edit limits
               </button>
               <button
                 type="button"
-                className="rounded-lg border border-teal-600 px-3 py-2 text-sm font-semibold text-teal-700"
+                className="btn-outline"
                 onClick={() => setIsWhyOpen((v) => !v)}
               >
                 Why this schedule?
               </button>
               <button
                 type="button"
-                className="rounded-lg border border-slate-900 px-3 py-2 text-sm font-semibold"
+                className="btn-outline"
                 onClick={() => {
                   setSimulatedSlot(scenarioDemoSlots.morning);
                   setView("results");
@@ -384,7 +384,7 @@ function App() {
           </div>
 
           {isWhyOpen && (
-            <div className="card">
+            <div className="explanation">
               <h3 className="text-lg font-bold">Schedule Explanation</h3>
               <p className="mt-2 text-sm text-slate-600">
                 Electricity price: {scoreLevel(currentSignals?.priceScore ?? 0)} | Local grid demand: {scoreLevel(currentSignals?.dsoScore ?? 0)} | System flexibility need: {scoreLevel(currentSignals?.tsoScore ?? 0)}
@@ -515,17 +515,17 @@ function App() {
 
 function Metric({ title, value }: { title: string; value: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-3">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{title}</p>
-      <p className="mt-1 text-base font-semibold">{value}</p>
+    <div className="metric-card">
+      <p className="metric-key">{title}</p>
+      <p className="metric-val">{value}</p>
     </div>
   );
 }
 
 function ScenarioField({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-300 bg-white/80 p-2">
-      <p className="text-xs uppercase text-slate-500">{label}</p>
+    <div className="metric-card">
+      <p className="metric-key">{label}</p>
       <p className="font-semibold">{value}</p>
     </div>
   );
@@ -541,7 +541,7 @@ function WeightSlider({
   onChange: (value: number) => void;
 }) {
   return (
-    <label className="space-y-1 rounded-lg border border-slate-300 bg-white p-3">
+    <label className="space-y-1 rounded-xl border border-slate-200 bg-white p-3">
       <span className="text-sm font-semibold">{label} {value.toFixed(0)}%</span>
       <input
         type="range"
@@ -550,7 +550,7 @@ function WeightSlider({
         step={1}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-teal-700"
+                className="w-full"
       />
     </label>
   );
