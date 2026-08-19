@@ -1,0 +1,524 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FlexPlug — click dummy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  /* same palette as the React app (tailwind.config.js + src/index.css) */
+  --ink:#0f172a;
+  --ink-soft:#1e293b;
+  --mist:#f8fafc;
+  --card:#ffffff;
+  --muted:#64748b;
+  --line:#e2e8f0;
+  --line-strong:#cbd5e1;
+  --accent:#0f766e;      /* teal — combined signal, charging */
+  --accent-soft:#99f6e4;
+  --accent-tint:#f0fdfa;
+  --signal:#f97316;      /* orange — charging power / feeding back */
+  --strain:#b45309;      /* amber — grid strain, alerts */
+  --price:#1d4ed8;       /* blue — price signal */
+  --radius:16px;
+  --radius-lg:24px;
+  --shadow-card:0 18px 45px rgba(15,23,42,.12);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh;
+  color:var(--ink);
+  font-family:"Space Grotesk",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding:24px 16px 48px;
+  background:
+    radial-gradient(circle at 12% 14%, rgba(15,118,110,.22), transparent 30%),
+    radial-gradient(circle at 80% 0%, rgba(191,219,254,.7), transparent 34%),
+    linear-gradient(180deg,#f8fafc 0%,#eff6ff 52%,#f8fafc 100%);
+  background-attachment:fixed;
+}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.rise{animation:rise 500ms ease-out both}
+
+.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:24px;align-items:start}
+@media(max-width:860px){.wrap{grid-template-columns:1fr}}
+
+/* ---------- header ---------- */
+.masthead{
+  grid-column:1/-1;border:1px solid rgba(153,246,228,.7);border-radius:var(--radius-lg);
+  background:rgba(255,255,255,.85);box-shadow:var(--shadow-card);padding:20px;margin-bottom:2px;
+  display:flex;flex-wrap:wrap;align-items:center;gap:16px;justify-content:space-between
+}
+.masthead .eyebrow-lg{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.2em;
+  text-transform:uppercase;color:#0f766e;margin:0}
+.masthead h1{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:26px;margin:8px 0 0;letter-spacing:-.02em}
+.masthead .sub{border-radius:12px;background:var(--accent);color:#fff;padding:8px 16px;
+  font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase}
+
+/* ---------- phone ---------- */
+.phone{
+  background:var(--ink);border-radius:34px;padding:12px;
+  box-shadow:var(--shadow-card);position:sticky;top:24px;
+}
+@media(max-width:860px){.phone{position:static}}
+.screen{
+  background:var(--card);border-radius:24px;height:660px;overflow:hidden;
+  display:flex;flex-direction:column;position:relative
+}
+.statusbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 18px 6px;font-family:"IBM Plex Mono",monospace;font-size:10px;
+  letter-spacing:.1em;color:var(--muted)
+}
+.view{flex:1;overflow-y:auto;padding:6px 18px 18px;scrollbar-width:thin}
+.view::-webkit-scrollbar{width:4px}
+.view::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:4px}
+
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--accent);margin:14px 0 6px}
+h2.t{font-family:"Space Grotesk",sans-serif;font-size:21px;font-weight:700;line-height:1.2;margin:0 0 8px;letter-spacing:-.015em}
+p.body{font-size:13.5px;line-height:1.5;color:var(--muted);margin:0 0 14px}
+
+/* ---------- flex band : the signature ---------- */
+.band{background:var(--ink);border-radius:var(--radius);padding:14px 12px 10px;margin:4px 0 12px}
+.band-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.band-top .lbl{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:#94a3b8}
+.band-top .val{font-family:"Space Grotesk",sans-serif;color:#fff;font-size:15px;font-weight:500}
+.bars{display:flex;align-items:flex-end;gap:2px;height:78px}
+.bar{flex:1;position:relative;display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.bar .px{width:100%;background:#334155;border-radius:4px 4px 0 0;transition:height .35s ease,background .35s ease}
+.bar.charge .px{background:var(--accent)}
+.bar.v2g .px{background:var(--signal)}
+.bar.strain .px{background:#78350f}
+.bar.strain.charge .px{background:var(--accent)}
+.axis{display:flex;justify-content:space-between;margin-top:6px;
+  font-family:"IBM Plex Mono",monospace;font-size:9px;color:#94a3b8}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:9px;
+  font-family:"IBM Plex Mono",monospace;font-size:9px;color:#94a3b8;letter-spacing:.06em}
+.legend i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:-1px}
+.dep{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.85}
+.bandwrap{position:relative}
+
+/* ---------- controls ---------- */
+.ctl{border:1px solid var(--line);border-radius:var(--radius);padding:13px 14px;margin-bottom:10px;background:#fff}
+.ctl .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+.ctl .name{font-size:13px;font-weight:600}
+.ctl .num{font-family:"IBM Plex Mono",monospace;font-size:15px;font-weight:600}
+.ctl .hint{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.45}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:3px;background:var(--line-strong);border-radius:3px;outline:none;margin:2px 0;accent-color:var(--accent)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+  background:var(--accent);cursor:pointer;border:3px solid #fff;box-shadow:0 1px 4px rgba(15,23,42,.28)}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--accent);
+  cursor:pointer;border:3px solid #fff;box-shadow:0 1px 4px rgba(15,23,42,.28)}
+input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--accent);outline-offset:2px}
+.ends{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;
+  font-size:9.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:4px}
+
+.toggle{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px;background:#fff}
+.toggle .name{font-size:13px;font-weight:600;margin-bottom:3px}
+.toggle .desc{font-size:11.5px;color:var(--muted);line-height:1.4}
+.sw{width:44px;height:26px;border-radius:13px;background:var(--line-strong);position:relative;flex:0 0 auto;
+  cursor:pointer;transition:background .2s;border:none;padding:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+  background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(15,23,42,.3)}
+.sw[aria-checked=true]{background:var(--accent)}
+.sw[aria-checked=true]::after{transform:translateX(18px)}
+.sw:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- buttons ---------- */
+.btn{width:100%;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:600;
+  font-family:"Space Grotesk",sans-serif;cursor:pointer;background:var(--ink);color:#fff;transition:background .15s,border-color .15s,color .15s}
+.btn:hover{background:var(--ink-soft)}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line-strong)}
+.btn.ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn.warn{background:var(--strain)}
+.btn.warn:hover{background:#92400e}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btnrow{display:flex;gap:8px;margin-top:8px}
+.btnrow .btn{flex:1}
+
+/* ---------- misc blocks ---------- */
+.stat{display:flex;gap:10px;margin:10px 0}
+.stat .box{flex:1;border:1px solid var(--line);border-radius:12px;padding:11px 12px;background:#fff}
+.stat .k{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.stat .v{font-family:"Space Grotesk",sans-serif;font-size:21px;font-weight:700;letter-spacing:-.02em}
+.stat .v.pos{color:var(--accent)}
+
+.why{background:var(--accent-tint);border:1px solid var(--accent-soft);border-left:3px solid var(--accent);
+  border-radius:12px;padding:11px 13px;font-size:12.5px;line-height:1.55;margin:10px 0;color:#134e4a}
+.why b{font-weight:700;color:var(--ink)}
+
+.alert{background:#fffbeb;border:1px solid #fcd34d;border-radius:var(--radius);padding:14px;margin:10px 0}
+.alert .h{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:15px;margin-bottom:6px;color:var(--strain)}
+.alert .b{font-size:12.5px;line-height:1.5;color:#78350f}
+
+.qlist{list-style:none;padding:0;margin:8px 0 0}
+.qlist li{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}
+.qlist li:last-child{border-bottom:none}
+.qlist .dot{width:18px;height:18px;border-radius:50%;background:var(--accent);flex:0 0 auto;
+  display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700;margin-top:1px}
+
+.plug{height:150px;border-radius:var(--radius);background:var(--ink);position:relative;overflow:hidden;
+  display:grid;place-items:center;margin:8px 0 14px}
+.plug .pulse{width:70px;height:70px;border-radius:50%;border:2px solid var(--accent);
+  animation:pulse 2.2s ease-out infinite}
+.plug .core{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--accent)}
+@keyframes pulse{0%{transform:scale(.35);opacity:1}100%{transform:scale(1.6);opacity:0}}
+@media(prefers-reduced-motion:reduce){.plug .pulse{animation:none;transform:scale(1);opacity:.4}
+  .bar .px{transition:none}
+  .rise{animation:none}}
+
+/* ---------- nav / notes panel ---------- */
+.notes h3{font-family:"Space Grotesk",sans-serif;font-size:15px;font-weight:700;margin:0 0 8px;letter-spacing:-.01em}
+.steps{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.step{font-family:"Space Grotesk",sans-serif;font-size:12px;font-weight:600;letter-spacing:.04em;padding:8px 16px;
+  border:none;box-shadow:inset 0 0 0 1px var(--line-strong);border-radius:12px;background:rgba(255,255,255,.75);
+  cursor:pointer;color:#334155;transition:background .15s,color .15s}
+.step:hover{background:#fff}
+.step[aria-current=true]{background:var(--ink);color:#fff;box-shadow:none}
+.step:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.assump{border-top:1px solid var(--line);padding:14px 0}
+.assump .tag{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:5px}
+.assump .q{font-size:13.5px;font-weight:600;margin-bottom:5px;line-height:1.4}
+.assump .a{font-size:12.5px;color:var(--muted);line-height:1.55}
+.notecard{background:rgba(255,255,255,.8);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 18px 6px;box-shadow:var(--shadow-card);backdrop-filter:blur(4px)}
+.disc{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+</style>
+
+<div class="wrap">
+  <div class="masthead rise">
+    <div>
+      <p class="eyebrow-lg">FlexPlug</p>
+      <h1>FlexPlug: Household EV Charging Click Dummy</h1>
+    </div>
+    <div class="sub">Group B06 · Energinet Challenge B</div>
+  </div>
+
+  <!-- ============ PHONE ============ -->
+  <div class="phone">
+    <div class="screen">
+      <div class="statusbar"><span>09:41</span><span id="sbRight">FLEXPLUG</span></div>
+      <div class="view" id="view"></div>
+    </div>
+  </div>
+
+  <!-- ============ NOTES ============ -->
+  <div class="notes">
+    <div class="steps" id="steps"></div>
+    <div class="notecard">
+      <h3 id="noteTitle"></h3>
+      <div id="noteBody"></div>
+    </div>
+    <div class="disc">
+      Prices, grid signals and renewable share are invented for demonstration. The scheduler is real:
+      it picks the cheapest hours before your departure and, when the combined signal is on, avoids
+      hours when the local grid is under strain. Turn the combined signal off to see the price-only
+      baseline your simulation compares against.
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- invented but plausible 24h data, starting 17:00 ----------
+// index 0 = 17:00 today ... index 23 = 16:00 tomorrow
+const HOURS = Array.from({length:24},(_,i)=>(17+i)%24);
+const PRICE = [2.44,2.71,2.38,1.92,1.41,1.08,0.86,0.71,0.63,0.58,0.61,0.74,0.95,1.68,2.15,1.84,1.36,1.12,1.05,1.14,1.42,1.79,2.02,2.26];
+const STRAIN= [0.9,1.0,0.8,0.5,0.2,0.1,0.0,0.0,0.0,0.0,0.0,0.1,0.3,0.8,0.9,0.6,0.2,0.1,0.1,0.2,0.4,0.6,0.7,0.8];
+const GREEN = [0.31,0.28,0.36,0.52,0.68,0.79,0.86,0.90,0.88,0.84,0.79,0.71,0.62,0.44,0.38,0.47,0.61,0.70,0.74,0.71,0.63,0.52,0.44,0.38];
+
+const state = {
+  screen:0,
+  depIdx:14,      // 07:00 next morning
+  target:80,
+  greenBias:35,   // 0 = cheapest, 100 = greenest
+  combined:true,
+  v2g:true,
+  shareCal:true,
+  soc:34
+};
+
+const fmtH = i => String(HOURS[i]).padStart(2,"0")+":00";
+const kWhPerHour = 7.4, battery = 62;
+
+function plan(){
+  const need = Math.max(0,(state.target-state.soc)/100*battery);
+  const hoursNeeded = Math.ceil(need/kWhPerHour);
+  const window = [];
+  for(let i=0;i<=state.depIdx;i++){
+    const w = state.greenBias/100;
+    let score = (1-w)*(PRICE[i]/2.8) + w*(1-GREEN[i]);
+    if(state.combined) score += STRAIN[i]*0.55;
+    window.push({i,score});
+  }
+  window.sort((a,b)=>a.score-b.score);
+  const charge = new Set(window.slice(0,hoursNeeded).map(o=>o.i));
+  const v2gSet = new Set();
+  if(state.v2g && state.combined){
+    for(let i=0;i<state.depIdx-1;i++){
+      if(STRAIN[i]>=0.85 && !charge.has(i)) v2gSet.add(i);
+    }
+  }
+  let cost=0,green=0;
+  charge.forEach(i=>{cost+=PRICE[i]*kWhPerHour;green+=GREEN[i];});
+  const flat = PRICE.slice(0,hoursNeeded).reduce((a,b)=>a+b,0)*kWhPerHour;
+  const naive = PRICE.slice(0,Math.min(hoursNeeded,state.depIdx+1)).reduce((a,b)=>a+b,0)*kWhPerHour || flat;
+  return {charge,v2gSet,hoursNeeded,cost,naive,
+          greenAvg: hoursNeeded? green/hoursNeeded : 0,
+          exported: v2gSet.size*kWhPerHour*0.6};
+}
+
+function bandHTML(p,showDep=true){
+  const max = Math.max(...PRICE);
+  const bars = PRICE.map((v,i)=>{
+    const h = 16 + (v/max)*84;
+    let cls = "bar";
+    if(state.combined && STRAIN[i]>0.6) cls+=" strain";
+    if(p.charge.has(i)) cls+=" charge";
+    if(p.v2gSet.has(i)) cls+=" v2g";
+    return `<div class="${cls}" title="${fmtH(i)} · ${v.toFixed(2)} kr/kWh"><div class="px" style="height:${h}%"></div></div>`;
+  }).join("");
+  const depPct = ((state.depIdx+0.5)/24)*100;
+  return `
+  <div class="band">
+    <div class="band-top">
+      <span class="lbl">Tonight's plan</span>
+      <span class="val">${p.hoursNeeded} h · ready ${fmtH(state.depIdx)}</span>
+    </div>
+    <div class="bandwrap">
+      <div class="bars">${bars}</div>
+      ${showDep?`<div class="dep" style="left:${depPct}%"></div>`:""}
+    </div>
+    <div class="axis"><span>17:00</span><span>23:00</span><span>05:00</span><span>11:00</span><span>16:00</span></div>
+    <div class="legend">
+      <span><i style="background:var(--accent)"></i>charging</span>
+      ${state.v2g&&state.combined?`<span><i style="background:var(--signal)"></i>feeding back</span>`:""}
+      <span><i style="background:#334155"></i>price</span>
+      ${state.combined?`<span><i style="background:#78350f"></i>grid under strain</span>`:""}
+    </div>
+  </div>`;
+}
+
+// ---------------- screens ----------------
+const screens = [
+{
+  key:"PLUG IN",
+  note:"Step 1 — Plug it in",
+  noteBody:`<p class="body">The storyboard opens with the device between the existing wall charger and the car.
+   No installer, no rewiring. That promise is assumption 4 on your list, and it is also the promise most likely to break
+   for bidirectional charging.</p>`,
+  render:p=>`
+    <div class="eyebrow">Device found</div>
+    <h2 class="t">FlexPlug is connected</h2>
+    <p class="body">Sitting between your wall charger and the car. Nothing was rewired and no electrician was needed.</p>
+    <div class="plug"><div class="pulse"></div><div class="core"></div></div>
+    <ul class="qlist">
+      <li><span class="dot">✓</span><div>Wall charger recognised — Easee Home, 11 kW</div></li>
+      <li><span class="dot">✓</span><div>Car recognised — 62 kWh battery, charging at 7.4 kW</div></li>
+      <li><span class="dot">✓</span><div>Grid area confirmed — Radius Elnet, DK2</div></li>
+    </ul>
+    <div style="margin-top:16px"><button class="btn" onclick="go(1)">Start setup</button></div>`
+},
+{
+  key:"SETUP",
+  note:"Step 2 — Quick setup",
+  noteBody:`<p class="body">Three questions, then the app has enough to schedule. Keeping onboarding this short is
+   what makes "effortless" testable — if people abandon here, the effort barrier your brief identifies is real
+   even in the version designed to remove it.</p>`,
+  render:p=>`
+    <div class="eyebrow">1 of 3</div>
+    <h2 class="t">When do you need the car?</h2>
+    <p class="body">FlexPlug will always have it ready by this time. You can change it any evening.</p>
+    <div class="ctl">
+      <div class="row"><span class="name">Ready by</span><span class="num">${fmtH(state.depIdx)}</span></div>
+      <input type="range" min="8" max="20" value="${state.depIdx}" oninput="set('depIdx',+this.value)">
+      <div class="ends"><span>01:00</span><span>13:00</span></div>
+      <div class="hint">Charging finishes before this time, every time. If it can't, you get told the evening before — not the morning of.</div>
+    </div>
+    <div class="ctl">
+      <div class="row"><span class="name">Charge to</span><span class="num">${state.target}%</span></div>
+      <input type="range" min="50" max="100" step="5" value="${state.target}" oninput="set('target',+this.value)">
+      <div class="ends"><span>50%</span><span>100%</span></div>
+      <div class="hint">Currently at ${state.soc}%. Most days you drive under 60 km, so 80% leaves plenty of room.</div>
+    </div>
+    <div class="ctl">
+      <div class="row"><span class="name">Cheapest or greenest</span>
+        <span class="num">${state.greenBias<25?"Cheapest":state.greenBias>70?"Greenest":"Balanced"}</span></div>
+      <input type="range" min="0" max="100" value="${state.greenBias}" oninput="set('greenBias',+this.value)">
+      <div class="ends"><span>Cheapest</span><span>Greenest</span></div>
+      <div class="hint">Cheap hours and windy hours usually overlap in Denmark, so this rarely costs you much either way.</div>
+    </div>
+    <div style="margin-top:14px"><button class="btn" onclick="go(2)">See tonight's plan</button></div>`
+},
+{
+  key:"PLAN",
+  note:"Step 3–4 — Set preferences, charges itself",
+  noteBody:`<p class="body">This is the screen your trust assumption lives on. The plan is visible before it runs,
+   with a plain-language reason, and it can be overridden without leaving the screen. Toggle the combined signal
+   off to see the price-only baseline — that comparison is your fourth prototype.</p>`,
+  render:p=>`
+    <div class="eyebrow">Plan for tonight</div>
+    <h2 class="t">Charging in ${p.hoursNeeded} cheap hours</h2>
+    ${bandHTML(p)}
+    <div class="stat">
+      <div class="box"><div class="k">Cost tonight</div><div class="v">${p.cost.toFixed(0)} kr</div></div>
+      <div class="box"><div class="k">Renewable</div><div class="v pos">${Math.round(p.greenAvg*100)}%</div></div>
+    </div>
+    <div class="why">
+      <b>Why these hours.</b> Power is cheapest between 01:00 and 05:00 and the wind is strong overnight.
+      ${state.combined?`The local grid is busy until about 21:00, so FlexPlug waits — charging then would add to a peak your neighbourhood is already causing.`:`The local grid signal is switched off, so only price is being used.`}
+    </div>
+    <div class="toggle">
+      <div><div class="name">Use grid signals as well as price</div>
+      <div class="desc">Adds what the distribution grid and Energinet need, not just the market price.</div></div>
+      <button class="sw" role="switch" aria-checked="${state.combined}" aria-label="Use grid signals" onclick="set('combined',!state.combined)"></button>
+    </div>
+    <div class="toggle">
+      <div><div class="name">Let the car help at peak times</div>
+      <div class="desc">Feeds power back when the grid is strained. Never below the charge you asked for.</div></div>
+      <button class="sw" role="switch" aria-checked="${state.v2g}" aria-label="Allow feeding back" onclick="set('v2g',!state.v2g)"></button>
+    </div>
+    <div class="btnrow">
+      <button class="btn ghost" onclick="go(1)">Change times</button>
+      <button class="btn" onclick="go(3)">Looks right</button>
+    </div>
+    <div style="margin-top:8px"><button class="btn ghost" onclick="go(5)">Charge now instead</button></div>`
+},
+{
+  key:"GRID",
+  note:"Step 5 — Helps the grid",
+  noteBody:`<p class="body">The moment automation costs the user something. Two design decisions to test here:
+   the request is announced rather than silent, and declining is one tap with no penalty. If people decline
+   routinely, the flexibility is nominal and your revenue assumption collapses.</p>`,
+  render:p=>`
+    <div class="eyebrow">Now · 18:20</div>
+    <h2 class="t">The grid needs help for 40 minutes</h2>
+    <div class="alert">
+      <div class="h">Radius has asked for less load in your area</div>
+      <div class="b">Everyone is home and cooking. FlexPlug will hold off charging until 21:00${state.v2g?` and send about ${p.exported.toFixed(0)} kWh back from your car`:``}.
+      Your car will still be at ${state.target}% by ${fmtH(state.depIdx)}.</div>
+    </div>
+    <div class="stat">
+      <div class="box"><div class="k">You earn</div><div class="v pos">${(6+p.v2gSet.size*4.5).toFixed(0)} kr</div></div>
+      <div class="box"><div class="k">Charge kept</div><div class="v">${state.soc}%</div></div>
+    </div>
+    <div class="why">
+      <b>Your limits still apply.</b> FlexPlug will not go below the level you set, and will not touch the car
+      after ${fmtH(Math.max(0,state.depIdx-1))}. Decline as often as you like — nothing changes for you if you do.
+    </div>
+    <div class="btnrow">
+      <button class="btn ghost" onclick="go(4)">Not tonight</button>
+      <button class="btn" onclick="go(4)">Go ahead</button>
+    </div>`
+},
+{
+  key:"MORNING",
+  note:"Step 6 — Ready & rewarded",
+  noteBody:`<p class="body">Your brief's value promise, made checkable. The numbers shown are per month, because
+   a per-night figure of a few kroner is honest and unpersuasive — which is itself a finding about assumption 5.</p>`,
+  render:p=>`
+    <div class="eyebrow">This morning · 07:00</div>
+    <h2 class="t">Ready at ${state.target}%, as asked</h2>
+    ${bandHTML(p,false)}
+    <div class="stat">
+      <div class="box"><div class="k">Saved last night</div><div class="v pos">${(p.naive-p.cost).toFixed(0)} kr</div></div>
+      <div class="box"><div class="k">CO₂ avoided</div><div class="v pos">${(p.greenAvg*2.4).toFixed(1)} kg</div></div>
+    </div>
+    <div class="stat">
+      <div class="box"><div class="k">Saved this month</div><div class="v pos">${((p.naive-p.cost)*26).toFixed(0)} kr</div></div>
+      <div class="box"><div class="k">Flexibility given</div><div class="v">${(p.exported*12).toFixed(0)} kWh</div></div>
+    </div>
+    <div class="why">
+      <b>Where the money came from.</b> ${((p.naive-p.cost)*26*0.72).toFixed(0)} kr from charging at cheaper hours,
+      ${((p.naive-p.cost)*26*0.28).toFixed(0)} kr paid by your grid company for the times you helped.
+    </div>
+    <div class="btnrow">
+      <button class="btn ghost" onclick="go(5)">Settings</button>
+      <button class="btn" onclick="go(2)">Tonight's plan</button>
+    </div>`
+},
+{
+  key:"CONTROL",
+  note:"Override & data",
+  noteBody:`<p class="body">Not in the storyboard, but it is where two assumptions are actually tested:
+   whether override needs to be permanent to feel like control, and whether calendar access is acceptable
+   in exchange for accuracy. Both are cheap to test with a click dummy and expensive to get wrong later.</p>`,
+  render:p=>`
+    <div class="eyebrow">Your control</div>
+    <h2 class="t">You can take over any time</h2>
+    <div class="toggle">
+      <div><div class="name">Charge now, full speed</div>
+      <div class="desc">Ignores prices and grid signals until the car is full.</div></div>
+      <button class="sw" role="switch" aria-checked="false" aria-label="Charge now" onclick="go(2)"></button>
+    </div>
+    <div class="toggle">
+      <div><div class="name">Road trip tomorrow</div>
+      <div class="desc">Charges to 100% and skips feeding back tonight.</div></div>
+      <button class="sw" role="switch" aria-checked="false" aria-label="Road trip mode" onclick="set('target',100)"></button>
+    </div>
+    <div class="toggle">
+      <div><div class="name">Use my calendar</div>
+      <div class="desc">Reads only start times of events, so early meetings move the deadline automatically.</div></div>
+      <button class="sw" role="switch" aria-checked="${state.shareCal}" aria-label="Use calendar" onclick="set('shareCal',!state.shareCal)"></button>
+    </div>
+    <div class="why">
+      ${state.shareCal
+        ? `<b>Calendar is on.</b> FlexPlug reads event start times and nothing else — no titles, no locations, no guests.`
+        : `<b>Calendar is off.</b> Scheduling uses the fixed time you set, so an early meeting means charging by hand.`}
+    </div>
+    <div class="ctl">
+      <div class="row"><span class="name">Never go below</span><span class="num">${Math.max(20,state.target-40)}%</span></div>
+      <input type="range" min="10" max="60" value="${Math.max(20,state.target-40)}" disabled>
+      <div class="hint">Feeding back to the grid stops at this level, whatever the grid is asking for.</div>
+    </div>
+    <div style="margin-top:12px"><button class="btn" onclick="go(4)">Done</button></div>`
+}
+];
+
+// ---------------- plumbing ----------------
+let lastScreen = -1;
+function set(k,v){ state[k]=v; render(); }
+function go(i){ state.screen=i; render(); document.getElementById("view").scrollTop=0; }
+
+function render(){
+  const p = plan();
+  const s = screens[state.screen];
+  const view = document.getElementById("view");
+  // only animate when the screen actually changes, not on every slider tick
+  const isNewScreen = state.screen !== lastScreen;
+  lastScreen = state.screen;
+  view.innerHTML = `<div class="${isNewScreen ? "rise" : ""}">${s.render(p)}</div>`;
+  document.getElementById("sbRight").textContent = s.key;
+  document.getElementById("noteTitle").textContent = s.note;
+  document.getElementById("noteBody").innerHTML = s.noteBody + assumpHTML(p);
+  document.getElementById("steps").innerHTML = screens.map((x,i)=>
+    `<button class="step" aria-current="${i===state.screen}" onclick="go(${i})">${x.key}</button>`).join("");
+}
+
+function assumpHTML(p){
+  const a = [
+    {t:"Assumption 4",q:"Works with existing chargers, no rewiring",
+     a:"The screen asserts it. A click dummy cannot test it — this one needs an electrician or a manufacturer, not a user."},
+    {t:"Assumption 2 & 3",q:"Users accept automation if they can override",
+     a:"Testable here: watch whether people look for the override before agreeing to the plan, and whether they trust the ready-by promise without proof."},
+    {t:"Assumption 2 & 3",q:"Users accept automation if they can override",
+     a:"The plan is shown before it runs and explained in one sentence. If testers still ask 'but what if', transparency is not sufficient and control has to be real."},
+    {t:"Assumption 7",q:"DSOs will pay for this flexibility",
+     a:"The screen promises a payment we cannot currently make. This is the assumption furthest outside your control and the one worth an interview, not a prototype."},
+    {t:"Assumption 5",q:"Savings are large enough to matter",
+     a:"Numbers shown per month for a reason. Ask testers what figure would make them buy the device — the gap to 150 EUR is your answer."},
+    {t:"Assumption 8",q:"Calendar data is acceptable if privacy is respected",
+     a:"Toggle it off and the schedule gets worse. Watching which testers accept that trade is cheaper than asking them about privacy in the abstract."}
+  ][state.screen];
+  return `<div class="assump"><div class="tag">${a.t}</div><div class="q">${a.q}</div><div class="a">${a.a}</div></div>`;
+}
+
+render();
+</script>
