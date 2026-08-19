@@ -10,7 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { winterWeekdayScenario } from "./data/scenarios";
+import { allScenarios, scenarioById } from "./data/scenarios";
 import {
   buildPlan,
   buildSessionResult,
@@ -18,7 +18,7 @@ import {
   normalizeWeights,
   timeToIndex,
 } from "./logic/scheduler";
-import type { Preferences, SessionResult, Weights } from "./types";
+import type { Preferences, Scenario, SessionResult, Weights } from "./types";
 
 type View = "preferences" | "charging" | "results" | "lab";
 
@@ -39,15 +39,20 @@ const defaultWeights: Weights = {
   tso: 25,
 };
 
-const demoSlots = {
-  evening: timeToIndex("17:30"),
-  gridEvent: timeToIndex("22:00"),
-  morning: timeToIndex("07:30"),
+const defaultScenario = allScenarios[0]!;
+
+const buildScenarioDemoSlots = (scenario: Scenario): { evening: number; gridEvent: number; morning: number } => {
+  const evening = timeToIndex(scenario.arrivalTime);
+  const morning = timeToIndex(scenario.departureTime);
+  const gridEvent = timeToIndex("22:00");
+  return { evening, gridEvent, morning };
 };
 
-const hourLabel = (slotIdx: number): string => winterWeekdayScenario.points[slotIdx]?.timestamp ?? "00:00";
-
 function App() {
+  const [selectedScenarioId, setSelectedScenarioId] = useState<string>(defaultScenario.id);
+  const selectedScenario: Scenario = scenarioById[selectedScenarioId] ?? defaultScenario;
+  const scenarioDemoSlots = useMemo(() => buildScenarioDemoSlots(selectedScenario), [selectedScenario]);
+
   const [view, setView] = useState<View>("preferences");
   const [preferences, setPreferences] = useState<Preferences>(() => {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -60,7 +65,7 @@ function App() {
     }
   });
   const [weights, setWeights] = useState<Weights>(defaultWeights);
-  const [simulatedSlot, setSimulatedSlot] = useState<number>(demoSlots.evening);
+  const [simulatedSlot, setSimulatedSlot] = useState<number>(scenarioDemoSlots.evening);
   const [isWhyOpen, setIsWhyOpen] = useState(false);
   const [forceChargeNow, setForceChargeNow] = useState(false);
   const [pauseAutomationTonight, setPauseAutomationTonight] = useState(false);
@@ -69,43 +74,55 @@ function App() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
   }, [preferences]);
 
+  useEffect(() => {
+    setPreferences((prev) => ({
+      ...prev,
+      departureTime: selectedScenario.departureTime,
+      targetSoc: selectedScenario.targetSoc,
+    }));
+    setSimulatedSlot(scenarioDemoSlots.evening);
+    setForceChargeNow(false);
+    setPauseAutomationTonight(false);
+    setIsWhyOpen(false);
+  }, [selectedScenario, scenarioDemoSlots.evening]);
+
   const optimizedPlan = useMemo(
     () =>
       buildPlan({
-        scenario: winterWeekdayScenario,
+        scenario: selectedScenario,
         preferences,
         weights,
         mode: pauseAutomationTonight || !preferences.automaticOptimization ? "fallbackNow" : "combined",
         currentSlot: simulatedSlot,
         forceCurrentCharge: forceChargeNow,
       }),
-    [preferences, weights, pauseAutomationTonight, simulatedSlot, forceChargeNow],
+    [preferences, weights, pauseAutomationTonight, simulatedSlot, forceChargeNow, selectedScenario],
   );
 
   const priceOnlyPlan = useMemo(
     () =>
       buildPlan({
-        scenario: winterWeekdayScenario,
+        scenario: selectedScenario,
         preferences,
         weights,
         mode: "priceOnly",
         currentSlot: simulatedSlot,
         forceCurrentCharge: false,
       }),
-    [preferences, weights, simulatedSlot],
+    [preferences, weights, simulatedSlot, selectedScenario],
   );
 
   const immediatePlan = useMemo(
     () =>
       buildPlan({
-        scenario: winterWeekdayScenario,
+        scenario: selectedScenario,
         preferences,
         weights,
         mode: "fallbackNow",
-        currentSlot: demoSlots.evening,
+        currentSlot: scenarioDemoSlots.evening,
         forceCurrentCharge: false,
       }),
-    [preferences, weights],
+    [preferences, weights, selectedScenario, scenarioDemoSlots.evening],
   );
 
   const sessionResult: SessionResult = useMemo(
@@ -137,12 +154,14 @@ function App() {
   const currentSignals = timelineData[simulatedSlot] ?? timelineData[0];
 
   const resetDemo = () => {
-    setSimulatedSlot(demoSlots.evening);
+    setSimulatedSlot(scenarioDemoSlots.evening);
     setForceChargeNow(false);
     setPauseAutomationTonight(false);
     setIsWhyOpen(false);
     setView("charging");
   };
+
+  const hourLabel = (slotIdx: number): string => selectedScenario.points[slotIdx]?.timestamp ?? "00:00";
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-6 text-ink sm:px-6">
@@ -159,9 +178,9 @@ function App() {
         <div className="mt-5 flex flex-wrap gap-2">
           {[
             { label: "Reset", action: resetDemo },
-            { label: "Evening", action: () => setSimulatedSlot(demoSlots.evening) },
-            { label: "Grid Event", action: () => setSimulatedSlot(demoSlots.gridEvent) },
-            { label: "Morning", action: () => setSimulatedSlot(demoSlots.morning) },
+            { label: "Arrival", action: () => setSimulatedSlot(scenarioDemoSlots.evening) },
+            { label: "Grid Event", action: () => setSimulatedSlot(scenarioDemoSlots.gridEvent) },
+            { label: "Departure", action: () => setSimulatedSlot(scenarioDemoSlots.morning) },
           ].map((item) => (
             <button
               type="button"
@@ -295,7 +314,7 @@ function App() {
           <div className="card">
             <h2 className="text-xl font-bold">Charging Plan</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <Metric title="Current charge" value={`${winterWeekdayScenario.initialSoc}%`} />
+              <Metric title="Current charge" value={`${selectedScenario.initialSoc}%`} />
               <Metric title="Target" value={`${preferences.targetSoc}%`} />
               <Metric title="Ready by" value={preferences.departureTime} />
               <Metric title="Estimated completion" value={optimizedPlan.estimatedCompletionTime} />
@@ -355,7 +374,7 @@ function App() {
                 type="button"
                 className="rounded-lg border border-slate-900 px-3 py-2 text-sm font-semibold"
                 onClick={() => {
-                  setSimulatedSlot(demoSlots.morning);
+                  setSimulatedSlot(scenarioDemoSlots.morning);
                   setView("results");
                 }}
               >
@@ -406,12 +425,28 @@ function App() {
         <section className="space-y-4 animate-rise">
           <div className="card space-y-3">
             <h2 className="text-xl font-bold">Signal Lab</h2>
-            <p className="text-sm text-slate-600">Scenario: {winterWeekdayScenario.name}</p>
+            <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+              <label className="space-y-1">
+                <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">Scenario</span>
+                <select
+                  value={selectedScenario.id}
+                  onChange={(e) => setSelectedScenarioId(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                >
+                  {allScenarios.map((scenario) => (
+                    <option key={scenario.id} value={scenario.id}>
+                      {scenario.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="text-sm text-slate-600">ID: {selectedScenario.id}</p>
+            </div>
             <div className="grid gap-2 text-sm md:grid-cols-3">
-              <ScenarioField label="EV arrival" value={winterWeekdayScenario.arrivalTime} />
-              <ScenarioField label="Initial SOC" value={`${winterWeekdayScenario.initialSoc}%`} />
-              <ScenarioField label="Battery" value={`${winterWeekdayScenario.batteryKWh} kWh`} />
-              <ScenarioField label="Max AC charging" value={`${winterWeekdayScenario.maxChargingPowerKw} kW`} />
+              <ScenarioField label="EV arrival" value={selectedScenario.arrivalTime} />
+              <ScenarioField label="Initial SOC" value={`${selectedScenario.initialSoc}%`} />
+              <ScenarioField label="Battery" value={`${selectedScenario.batteryKWh} kWh`} />
+              <ScenarioField label="Max AC charging" value={`${selectedScenario.maxChargingPowerKw} kW`} />
               <ScenarioField label="Target SOC" value={`${preferences.targetSoc}%`} />
               <ScenarioField label="Departure" value={preferences.departureTime} />
               <ScenarioField label="Time granularity" value="15 minutes" />
