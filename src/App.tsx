@@ -168,8 +168,8 @@ function App() {
       <header className="mb-6 animate-rise rounded-3xl border border-teal-200/70 bg-white/85 p-5 shadow-card">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-teal-700">Flexibility Platform Prototype</p>
-            <h1 className="mt-2 text-2xl font-bold md:text-3xl">Household Flexibility: EV Charging Automation Demo</h1>
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-teal-700">FlexPlug</p>
+            <h1 className="mt-2 text-2xl font-bold md:text-3xl">FlexPlug: Household EV Charging Automation Demo</h1>
           </div>
           <div className="rounded-xl bg-teal-700 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white">
             Demo time: {hourLabel(simulatedSlot)}

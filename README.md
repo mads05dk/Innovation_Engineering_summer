@@ -1,4 +1,4 @@
-# Flexibility Platform Prototype
+# FlexPlug
 
 Interactive EV charging prototype for user testing and concept validation.
 
